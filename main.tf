@@ -27,7 +27,8 @@ resource "aws_instance" "jenkins_agent" {
   ami                     = data.aws_ami.ami_info.id
   subnet_id              = "subnet-0ea9a2005fdcc6695" 
   user_data               = file("${path.module}/install_jenkins_agent.sh")
-
+  iam_instance_profile   = aws_iam_instance_profile.profile.name
+  
   # Define the root volume size and type
   root_block_device  {
     encrypted             = false
@@ -42,39 +43,43 @@ resource "aws_instance" "jenkins_agent" {
     Name   = "Jenkins-Agent"
   }
 }
-
-resource "aws_key_pair" "tools" {
-    key_name = "tools-key"
-    #you can paste the public key directly like this
-    #public_key = file("~/.ssh/openssh.pub")
-    # ~ means windows home directory
-    public_key = "${file("~/.ssh/tools.pub")}"
+resource "aws_iam_instance_profile" "profile" {
+  name = "k8s-instance-profile"
+  role = "k8s-iam-role-authentication"      
 }
 
-resource "aws_instance" "nexus" {
+# resource "aws_key_pair" "tools" {
+#     key_name = "tools-key"
+#     #you can paste the public key directly like this
+#     #public_key = file("~/.ssh/openssh.pub")
+#     # ~ means windows home directory
+#     public_key = "${file("~/.ssh/tools.pub")}"
+# }
 
-  instance_type          = "t3.medium"
-  vpc_security_group_ids = [var.allow_everything] #replace your SG
-  ami                    = data.aws_ami.nexus_ami_info.id
-  key_name               = aws_key_pair.tools.key_name
-  subnet_id              = "subnet-0ea9a2005fdcc6695"  
+# resource "aws_instance" "nexus" {
+
+#   instance_type          = "t3.medium"
+#   vpc_security_group_ids = [var.allow_everything] #replace your SG
+#   ami                    = data.aws_ami.nexus_ami_info.id
+#   key_name               = aws_key_pair.tools.key_name
+#   subnet_id              = "subnet-0ea9a2005fdcc6695"  
  
-  tags = {
-    Name   = "Nexus"
-  }
-}
-resource "aws_instance" "sonarqube" {
+#   tags = {
+#     Name   = "Nexus"
+#   }
+# }
+# resource "aws_instance" "sonarqube" {
 
-  instance_type          = "t3.medium"
-  vpc_security_group_ids = [var.allow_everything] #replace your SG
-  ami                    = data.aws_ami.sonarqube_ami_info.id
-  key_name               = aws_key_pair.tools.key_name
-  subnet_id              = "subnet-0ea9a2005fdcc6695" 
+#   instance_type          = "t3.medium"
+#   vpc_security_group_ids = [var.allow_everything] #replace your SG
+#   ami                    = data.aws_ami.sonarqube_ami_info.id
+#   key_name               = aws_key_pair.tools.key_name
+#   subnet_id              = "subnet-0ea9a2005fdcc6695" 
      
-  tags = {
-    Name   = "SonarQube"
-  }
-}
+#   tags = {
+#     Name   = "SonarQube"
+#   }
+# }
  
 resource "aws_route53_record" "jenkins_master_r53" {
     zone_id = var.zone_id
@@ -92,20 +97,20 @@ resource "aws_route53_record" "jenkins_agent_r53" {
     records = [aws_instance.jenkins_agent.public_ip]
     allow_overwrite = true
 }
-resource "aws_route53_record" "nexus_r53" {
-    zone_id = var.zone_id
-    name    = "nexus.${var.domain_name}"
-    type    = "A"
-    ttl     = 1
-    records = [aws_instance.nexus.public_ip]
-    allow_overwrite = true
-}
-resource "aws_route53_record" "sonarqube_r53" {
-    zone_id = var.zone_id
-    name    = "sonarqube.${var.domain_name}"
-    type    = "A"
-    ttl     = 1
-    records = [aws_instance.sonarqube.public_ip]
-    allow_overwrite = true
-}
+# resource "aws_route53_record" "nexus_r53" {
+#     zone_id = var.zone_id
+#     name    = "nexus.${var.domain_name}"
+#     type    = "A"
+#     ttl     = 1
+#     records = [aws_instance.nexus.public_ip]
+#     allow_overwrite = true
+# }
+# resource "aws_route53_record" "sonarqube_r53" {
+#     zone_id = var.zone_id
+#     name    = "sonarqube.${var.domain_name}"
+#     type    = "A"
+#     ttl     = 1
+#     records = [aws_instance.sonarqube.public_ip]
+#     allow_overwrite = true
+# }
 

@@ -9,7 +9,8 @@ backend "s3" {
   bucket = "jenkins-dev-remote-state"
   key = "jenkins-dev-tools"
   region = "us-east-1"
-  dynamodb_table="jenkins-dev-locking"
+  #dynamodb_table = "roboshop13-locking"
+  use_lockfile = true
   }
 }
 
